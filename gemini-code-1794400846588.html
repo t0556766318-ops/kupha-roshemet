@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">קופה רושמת</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #27ae60;
+            --danger: #c0392b;
+            --bg: #f4f6f9;
+            --panel-bg: #ffffff;
+            --card-size: 140px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            max-height: 45px;
+            max-width: 120px;
+            object-fit: contain;
+            background: white;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 15px;
+            gap: 15px;
+        }
+
+        .catalog-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .categories-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .category-btn {
+            padding: 8px 14px;
+            background: #e0e6ed;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .category-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr));
+            gap: 10px;
+            overflow-y: auto;
+            max-height: calc(100vh - 180px);
+            align-content: start;
+        }
+
+        .product-card {
+            background: var(--panel-bg);
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s, border-color 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: calc(var(--card-size) * 0.9);
+        }
+
+        .product-card:hover {
+            transform: scale(1.02);
+            border-color: var(--accent);
+        }
+
+        .product-card .price {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+
+        .stock-tag {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .stock-out {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .cart-section {
+            flex: 1;
+            background: var(--panel-bg);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            margin: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .cart-controls button {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .total-area {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            background-color: var(--primary);
+        }
+
+        .btn-success { background-color: var(--accent); }
+        .btn-danger { background-color: var(--danger); }
+        .btn-small { padding: 4px 8px; font-size: 0.85em; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 500px;
+            max-width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .receipt-box {
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ccc;
+            width: 300px;
+            margin: auto;
+            font-family: monospace;
+            text-align: center;
+        }
+
+        .receipt-box img {
+            max-width: 100px;
+            max-height: 60px;
+            margin-bottom: 8px;
+        }
+
+        .receipt-table {
+            width: 100%;
+            text-align: right;
+            margin: 10px 0;
+            border-collapse: collapse;
+        }
+
+        .receipt-table th, .receipt-table td {
+            padding: 4px 0;
+        }
+
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #printableReceipt, #printableReceipt * { visibility: visible; }
+            #printableReceipt { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay">מסנכרן נתונים...</div>
+
+    <header>
+        <div class="header-logo-container">
+            <img id="headerLogo" src="" alt="לוגו" class="header-logo" style="display:none;">
+            <h2 id="storeTitleDisplay">קופה רושמת</h2>
+        </div>
+        <div>
+            <button class="btn" onclick="syncCloudData()" style="margin-left: 10px; background-color: #3498db;">רענן נתונים</button>
+            <button class="btn" onclick="openAdminModal()">אזור מנהל</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- קטלוג -->
+        <div class="catalog-section">
+            <div class="categories-bar" id="categoriesBar"></div>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+
+        <!-- עגלה -->
+        <div class="cart-section">
+            <h3>עגלת קניות</h3>
+            <div class="cart-items" id="cartItems"></div>
+            <div class="total-area">
+                סה"כ: ₪<span id="cartTotal">0.00</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-success" style="flex:1" onclick="startCheckout('cash')">תשלום מזומן</button>
+                <button class="btn" style="flex:1; background-color: #2980b9;" onclick="startCheckout('credit')">תשלום אשראי</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- מודאל פרטי קונה -->
+    <div class="modal" id="customerModal">
+        <div class="modal-content">
+            <h3>פרטי רוכש</h3>
+            <div class="form-group">
+                <label>שם הקונה:</label>
+                <input type="text" id="custName" required>
+            </div>
+            <div class="form-group">
+                <label>מבני הישיבה?</label>
+                <select id="isYeshiva" onchange="togglePhoneField()">
+                    <option value="yes">כן</option>
+                    <option value="no">לא</option>
+                </select>
+            </div>
+            <div class="form-group" id="phoneGroup" style="display:none;">
+                <label>מספר טלפון:</label>
+                <input type="tel" id="custPhone">
+            </div>
+            <button class="btn btn-success" onclick="proceedToPayment()">המשך לתשלום</button>
+            <button class="btn btn-danger" onclick="closeModal('customerModal')">ביטול</button>
+        </div>
+    </div>
+
+    <!-- מודאל תשלום אשראי מרחף -->
+    <div class="modal" id="creditIframeModal">
+        <div class="modal-content" style="width: 700px; height: 600px; display: flex; flex-direction: column;">
+            <h3>תשלום באשראי (נדרים פלוס)</h3>
+            <iframe id="creditIframe" src="" style="width: 100%; flex: 1; border: 1px solid #ccc; margin: 10px 0;"></iframe>
+            <div style="display: flex; justify-content: space-between;">
+                <button class="btn btn-success" onclick="completeCreditTransaction()">אישור סיום תשלום</button>
+                <button class="btn btn-danger" onclick="closeModal('creditIframeModal')">ביטול עסקה</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- מודאל מנהל -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content" style="width: 750px;">
+            <h3>אזור מנהל והגדרות</h3>
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('reports')">דוחות</button>
+                <button class="tab-btn" onclick="switchTab('products')">ניהול מוצרים</button>
+                <button class="tab-btn" onclick="switchTab('settings')">הגדרות קופה וקבלה</button>
+            </div>
+
+            <!-- לשונית דוחות -->
+            <div id="tab-reports" class="tab-content">
+                <h4>כמויות שנמכרו (מכירות פעילות):</h4>
+                <div id="salesSummaryReport" style="margin: 10px 0;"></div>
+                <hr style="margin: 15px 0;">
+                <h4>ניהול קבלות:</h4>
+                <div id="receiptsListAdmin" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- לשונית ניהול מוצרים -->
+            <div id="tab-products" class="tab-content" style="display:none;">
+                <h4>הוספת / עריכת מוצר</h4>
+                <input type="hidden" id="editProductId">
+                <div class="form-group">
+                    <label>שם מוצר:</label>
+                    <input type="text" id="prodName">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>מחיר (₪):</label>
+                        <input type="number" id="prodPrice" step="0.1">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>מלאי:</label>
+                        <input type="number" id="prodStock">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>קטגוריה:</label>
+                    <input type="text" id="prodCategory" placeholder="כללי">
+                </div>
+                <button class="btn btn-success" onclick="saveProduct()">שמור מוצר</button>
+                <button class="btn" onclick="resetProdForm()">איפוס טופס</button>
+                <hr style="margin: 15px 0;">
+                <h4>רשימת מוצרים קיימים</h4>
+                <div id="adminProductsList" style="max-height: 180px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- לשונית הגדרות -->
+            <div id="tab-settings" class="tab-content" style="display:none;">
+                <div class="form-group">
+                    <label>שם העסק / האתר:</label>
+                    <input type="text" id="settingStoreName">
+                </div>
+                <div class="form-group">
+                    <label>קישור ללוגו (URL):</label>
+                    <input type="text" id="settingLogoUrl" placeholder="https://example.com/logo.png">
+                </div>
+                <div class="form-group">
+                    <label>גודל קוביות מוצר:</label>
+                    <select id="settingCardSize">
+                        <option value="110px">קטן</option>
+                        <option value="140px">בינוני</option>
+                        <option value="180px">גדול</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>כותרת ראשית בקבלה:</label>
+                    <input type="text" id="settingReceiptHeader">
+                </div>
+                <div class="form-group">
+                    <label>כתובת / טלפון בקבלה:</label>
+                    <input type="text" id="settingReceiptSub">
+                </div>
+                <div class="form-group">
+                    <label>הודעת סיום בקבלה (תחתית):</label>
+                    <input type="text" id="settingReceiptFooter">
+                </div>
+                <button class="btn btn-success" onclick="saveSettings()">שמור הגדרות</button>
+            </div>
+
+            <br>
+            <button class="btn btn-danger" onclick="closeModal('adminModal')">סגור</button>
+        </div>
+    </div>
+
+    <!-- מודאל תצוגת קבלה להדפסה -->
+    <div class="modal" id="receiptViewModal">
+        <div class="modal-content" style="width: 360px;">
+            <div class="receipt-box" id="printableReceipt">
+                <img id="receiptLogo" src="" style="display:none;">
+                <h3 id="receiptHeaderTitle"></h3>
+                <div id="receiptSubTitle" style="font-size:0.85em; margin-bottom:8px;"></div>
+                <hr>
+                <div style="text-align: right; font-size: 0.8em; margin: 8px 0;">
+                    <div>תאריך: <span id="rDate"></span></div>
+                    <div>לקוח: <span id="rCust"></span></div>
+                    <div>טלפון: <span id="rPhone"></span></div>
+                    <div>אמצעי תשלום: <span id="rPayType"></span></div>
+                </div>
+                <hr>
+                <table class="receipt-table">
+                    <thead>
+                        <tr><th>פריט</th><th>כמות</th><th>סה"כ</th></tr>
+                    </thead>
+                    <tbody id="rItems"></tbody>
+                </table>
+                <hr>
+                <div style="text-align: left; font-weight: bold; margin: 8px 0;">
+                    סה"כ לתשלום: ₪<span id="rTotal"></span>
+                </div>
+                <hr>
+                <div id="receiptFooterTitle" style="font-size:0.8em; margin-top:8px;"></div>
+            </div>
+            <br>
+            <button class="btn btn-success" onclick="window.print()">הדפס קבלה</button>
+            <button class="btn btn-danger" onclick="closeModal('receiptViewModal')">סגור</button>
+        </div>
+    </div>
+
+    <script>
+        const BIN_ID = '6af37d14ac6210605a7dff55';
+        const MASTER_KEY = '$2a$10$cybtg3PoipTjXjFR3oX98.nPvLBzrkxb4EKErPyFiFIC6AIoP0Uaq';
+        const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+        let appData = {
+            products: [],
+            receipts: [],
+            settings: {
+                storeName: 'קופה רושמת',
+                logoUrl: '',
+                cardSize: '140px',
+                receiptHeader: 'קבלת תשלום',
+                receiptSub: 'רחוב הישיבה | טלפון: 02-0000000',
+                receiptFooter: 'תודה רבה ותזכו למצוות!'
+            }
+        };
+
+        let cart = [];
+        let currentPaymentType = '';
+        let activeCategory = 'הכל';
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        async function syncCloudData() {
+            showLoading(true);
+            try {
+                const res = await fetch(API_URL + '/latest', {
+                    method: 'GET',
+                    headers: { 
+                        'X-Master-Key': MASTER_KEY 
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    appData = data.record;
+                    applySettings();
+                    renderCategories();
+                    renderProducts();
+                } else {
+                    alert('שגיאה בסנכרון הנתונים מהענן');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('שגיאה בתקשורת עם מסד הנתונים בענן');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function saveCloudData() {
+            showLoading(true);
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': MASTER_KEY
+                    },
+                    body: JSON.stringify(appData)
+                });
+                if (!res.ok) {
+                    alert('שגיאה בשמירת הנתונים בענן');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('שגיאה בתקשורת בעת השמירה');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function applySettings() {
+            const s = appData.settings || {};
+            document.getElementById('storeTitleDisplay').innerText = s.storeName || 'קופה רושמת';
+            document.getElementById('pageTitle').innerText = s.storeName || 'קופה רושמת';
+            document.documentElement.style.setProperty('--card-size', s.cardSize || '140px');
+            
+            const logoEl = document.getElementById('headerLogo');
+            if (s.logoUrl) {
+                logoEl.src = s.logoUrl;
+                logoEl.style.display = 'block';
+            } else {
+                logoEl.style.display = 'none';
+            }
+        }
+
+        async function saveSettings() {
+            appData.settings.storeName = document.getElementById('settingStoreName').value;
+            appData.settings.logoUrl = document.getElementById('settingLogoUrl').value;
+            appData.settings.cardSize = document.getElementById('settingCardSize').value;
+            appData.settings.receiptHeader = document.getElementById('settingReceiptHeader').value;
+            appData.settings.receiptSub = document.getElementById('settingReceiptSub').value;
+            appData.settings.receiptFooter = document.getElementById('settingReceiptFooter').value;
+
+            applySettings();
+            await saveCloudData();
+            alert('ההגדרות נשמרו בהצלחה בענן!');
+        }
+
+        function renderCategories() {
+            const bar = document.getElementById('categoriesBar');
+            const cats = ['הכל', ...new Set((appData.products || []).map(p => p.category || 'כללי'))];
+            bar.innerHTML = cats.map(c => `
+                <button class="category-btn ${c === activeCategory ? 'active' : ''}" onclick="setCategory('${c}')">${c}</button>
+            `).join('');
+        }
+
+        function setCategory(cat) {
+            activeCategory = cat;
+            renderCategories();
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+            const filtered = activeCategory === 'הכל' ? (appData.products || []) : (appData.products || []).filter(p => (p.category || 'כללי') === activeCategory);
+            
+            filtered.forEach(p => {
+                const isOutOfStock = p.stock <= 0;
+                grid.innerHTML += `
+                    <div class="product-card" onclick="addToCart(${p.id})">
+                        <div><strong>${p.name}</strong></div>
+                        <div class="price">₪${p.price.toFixed(2)}</div>
+                        <div class="stock-tag ${isOutOfStock ? 'stock-out' : ''}">
+                            ${isOutOfStock ? 'חוסר במלאי (' + p.stock + ')' : 'מלאי: ' + p.stock}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function addToCart(id) {
+            const prod = appData.products.find(p => p.id === id);
+            if (!prod) return;
+            
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                cart.push({ ...prod, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function updateCartQty(id, change) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty += change;
+            if (item.qty <= 0) {
+                cart = cart.filter(i => i.id !== id);
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div>${item.name}</div>
+                        <div class="cart-controls">
+                            <button onclick="updateCartQty(${item.id}, -1)">-</button>
+                            <span style="margin:0 5px;">${item.qty}</span>
+                            <button onclick="updateCartQty(${item.id}, 1)">+</button>
+                        </div>
+                        <div>₪${(item.price * item.qty).toFixed(2)}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('cartTotal').innerText = total.toFixed(2);
+        }
+
+        function startCheckout(type) {
+            if (cart.length === 0) return alert('העגלה ריקה');
+            currentPaymentType = type;
+            document.getElementById('customerModal').style.display = 'flex';
+        }
+
+        function togglePhoneField() {
+            const isYeshiva = document.getElementById('isYeshiva').value;
+            document.getElementById('phoneGroup').style.display = isYeshiva === 'no' ? 'block' : 'none';
+        }
+
+        function proceedToPayment() {
+            const name = document.getElementById('custName').value;
+            const isYeshiva = document.getElementById('isYeshiva').value;
+            const phone = document.getElementById('custPhone').value;
+
+            if (!name) return alert('נא להזין שם קונה');
+            if (isYeshiva === 'no' && !phone) return alert('נא להזין מספר טלפון');
+
+            closeModal('customerModal');
+
+            if (currentPaymentType === 'credit') {
+                document.getElementById('creditIframe').src = 'https://www.matara.pro/nedarimplus/online/?mosad=1000858';
+                document.getElementById('creditIframeModal').style.display = 'flex';
+            } else {
+                finalizeTransaction();
+            }
+        }
+
+        function completeCreditTransaction() {
+            closeModal('creditIframeModal');
+            finalizeTransaction();
+        }
+
+        async function finalizeTransaction() {
+            const name = document.getElementById('custName').value;
+            const isYeshiva = document.getElementById('isYeshiva').value;
+            const phone = document.getElementById('custPhone').value;
+
+            cart.forEach(item => {
+                const p = appData.products.find(prod => prod.id === item.id);
+                if (p) p.stock -= item.qty;
+            });
+
+            const total = parseFloat(document.getElementById('cartTotal').innerText);
+            const receipt = {
+                id: Date.now(),
+                date: new Date().toLocaleString('he-IL'),
+                customer: name,
+                isYeshiva: isYeshiva === 'yes',
+                phone: phone || '-',
+                items: [...cart],
+                total: total,
+                type: currentPaymentType === 'cash' ? 'מזומן' : 'אשראי',
+                active: true
+            };
+
+            if (!appData.receipts) appData.receipts = [];
+            appData.receipts.push(receipt);
+            await saveCloudData();
+
+            cart = [];
+            document.getElementById('custName').value = '';
+            document.getElementById('custPhone').value = '';
+            renderCart();
+            renderProducts();
+
+            showReceiptModal(receipt);
+        }
+
+        function showReceiptModal(receipt) {
+            const s = appData.settings || {};
+            document.getElementById('receiptHeaderTitle').innerText = s.receiptHeader || 'קבלת תשלום';
+            document.getElementById('receiptSubTitle').innerText = s.receiptSub || '';
+            document.getElementById('receiptFooterTitle').innerText = s.receiptFooter || '';
+
+            const logoEl = document.getElementById('receiptLogo');
+            if (s.logoUrl) {
+                logoEl.src = s.logoUrl;
+                logoEl.style.display = 'block';
+            } else {
+                logoEl.style.display = 'none';
+            }
+
+            document.getElementById('rDate').innerText = receipt.date;
+            document.getElementById('rCust').innerText = receipt.customer;
+            document.getElementById('rPhone').innerText = receipt.phone;
+            document.getElementById('rPayType').innerText = receipt.type;
+            document.getElementById('rTotal').innerText = receipt.total.toFixed(2);
+
+            const tbody = document.getElementById('rItems');
+            tbody.innerHTML = receipt.items.map(i => `
+                <tr>
+                    <td>${i.name}</td>
+                    <td>${i.qty}</td>
+                    <td>₪${(i.price * i.qty).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('receiptViewModal').style.display = 'flex';
+        }
+
+        function openAdminModal() {
+            const pass = prompt('הכנס סיסמת מנהל:');
+            if (pass !== '1234') return alert('סיסמה שגויה');
+
+            loadAdminData();
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+
+        function loadAdminData() {
+            const s = appData.settings || {};
+            document.getElementById('settingStoreName').value = s.storeName || '';
+            document.getElementById('settingLogoUrl').value = s.logoUrl || '';
+            document.getElementById('settingCardSize').value = s.cardSize || '140px';
+            document.getElementById('settingReceiptHeader').value = s.receiptHeader || '';
+            document.getElementById('settingReceiptSub').value = s.receiptSub || '';
+            document.getElementById('settingReceiptFooter').value = s.receiptFooter || '';
+
+            const summary = {};
+            (appData.receipts || []).filter(r => r.active).forEach(r => {
+                r.items.forEach(i => {
+                    summary[i.name] = (summary[i.name] || 0) + i.qty;
+                });
+            });
+
+            let sumHtml = '<ul>';
+            for (let [name, qty] of Object.entries(summary)) {
+                sumHtml += `<li><strong>${name}:</strong> ${qty} יחידות</li>`;
+            }
+            sumHtml += '</ul>';
+            document.getElementById('salesSummaryReport').innerHTML = sumHtml;
+
+            const receiptsHtml = (appData.receipts || []).map(r => `
+                <div style="padding: 5px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center;">
+                    <span>#${r.id} | ${r.date} | ${r.customer} | ₪${r.total.toFixed(2)} ${r.active ? '' : '(מבוטלת)'}</span>
+                    <div>
+                        <button class="btn btn-small" onclick='showReceiptModal(${JSON.stringify(r)})'>הצג</button>
+                        ${r.active ? `<button class="btn btn-danger btn-small" onclick="cancelReceipt(${r.id})">ביטול קבלה</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('receiptsListAdmin').innerHTML = receiptsHtml;
+
+            const prodListHtml = (appData.products || []).map(p => `
+                <div style="padding: 5px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between;">
+                    <span><strong>${p.name}</strong> - ₪${p.price} | מלאי: ${p.stock} | קטגוריה: ${p.category || 'כללי'}</span>
+                    <div>
+                        <button class="btn btn-small" onclick="editProduct(${p.id})">ערוך</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteProduct(${p.id})">מחק</button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('adminProductsList').innerHTML = prodListHtml;
+        }
+
+        async function saveProduct() {
+            const id = document.getElementById('editProductId').value;
+            const name = document.getElementById('prodName').value;
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const stock = parseInt(document.getElementById('prodStock').value);
+            const category = document.getElementById('prodCategory').value || 'כללי';
+
+            if (!name || isNaN(price) || isNaN(stock)) return alert('נא למלא את כל השדות בצורה תקינה');
+
+            if (!appData.products) appData.products = [];
+
+            if (id) {
+                const p = appData.products.find(item => item.id == id);
+                if (p) {
+                    p.name = name;
+                    p.price = price;
+                    p.stock = stock;
+                    p.category = category;
+                }
+            } else {
+                appData.products.push({
+                    id: Date.now(),
+                    name: name,
+                    price: price,
+                    stock: stock,
+                    category: category
+                });
+            }
+
+            await saveCloudData();
+            resetProdForm();
+            loadAdminData();
+            renderCategories();
+            renderProducts();
+        }
+
+        function editProduct(id) {
+            const p = appData.products.find(item => item.id == id);
+            if (!p) return;
+            document.getElementById('editProductId').value = p.id;
+            document.getElementById('prodName').value = p.name;
+            document.getElementById('prodPrice').value = p.price;
+            document.getElementById('prodStock').value = p.stock;
+            document.getElementById('prodCategory').value = p.category || 'כללי';
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('האם למחוק מוצר זה?')) return;
+            appData.products = appData.products.filter(p => p.id != id);
+            await saveCloudData();
+            loadAdminData();
+            renderCategories();
+            renderProducts();
+        }
+
+        function resetProdForm() {
+            document.getElementById('editProductId').value = '';
+            document.getElementById('prodName').value = '';
+            document.getElementById('prodPrice').value = '';
+            document.getElementById('prodStock').value = '';
+            document.getElementById('prodCategory').value = '';
+        }
+
+        async function cancelReceipt(id) {
+            if (!confirm('האם לבטל קבלה זו ולהחזיר את המלאי?')) return;
+            const r = appData.receipts.find(item => item.id == id);
+            if (r && r.active) {
+                r.active = false;
+                r.items.forEach(i => {
+                    const p = appData.products.find(prod => prod.id === i.id);
+                    if (p) p.stock += i.qty;
+                });
+                await saveCloudData();
+                loadAdminData();
+                renderProducts();
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        syncCloudData();
+    </script>
+</body>
+</html>
